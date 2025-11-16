@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Venue Data Crawler
 // @namespace    https://github.com/manchesterjm
-// @version      0.2.3
+// @version      0.2.4
 // @description  Scan venues for missing data and extract from websites
 // @author       manchesterjm
 // @match        https://www.waze.com/editor*
@@ -19,9 +19,9 @@
  *
  * Scans venues for missing data and extracts information from their websites.
  *
- * Version: 0.2.3 - Added state name to abbreviation conversion
+ * Version: 0.2.4 - Switched to DuckDuckGo (Google blocks automated requests)
  *
- * @file wme-venue-data-crawler-v0.2.3.user.js
+ * @file wme-venue-data-crawler-v0.2.4.user.js
  */
 
 /* global W, GM_xmlhttpRequest */
@@ -34,7 +34,7 @@
     // ============================================================================
 
     const SCRIPT_NAME = 'WME Venue Data Crawler';
-    const SCRIPT_VERSION = '0.2.3';
+    const SCRIPT_VERSION = '0.2.4';
     const SCRIPT_ID = 'wme-venue-data-crawler';
 
     /**
@@ -499,24 +499,35 @@
     }
 
     /**
-     * Perform Google search and extract first result
+     * Perform DuckDuckGo search and extract first result
+     * Using DuckDuckGo instead of Google because Google blocks automated requests
      * @param {string} query - Search query
      * @param {Function} callback - Callback with (error, url)
      */
-    function googleSearch(query, callback) {
-        const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
-        log(`Google search: ${query}`);
+    function duckDuckGoSearch(query, callback) {
+        // DuckDuckGo HTML search (not their API)
+        const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+        log(`DuckDuckGo search: ${query}`);
 
         GM_xmlhttpRequest({
             method: 'GET',
             url: searchUrl,
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0'
+            },
             onload: function(response) {
                 try {
+                    if (response.status !== 200) {
+                        logError(`DuckDuckGo returned status ${response.status}`);
+                        callback(new Error(`HTTP ${response.status}`), null);
+                        return;
+                    }
+
                     const html = response.responseText;
 
-                    // Extract first organic result URL
-                    // Google search results use specific patterns
-                    const urlRegex = /<a[^>]*href=["']\/url\?q=([^"'&]+)[&"']/i;
+                    // Extract first organic result URL from DuckDuckGo
+                    // DDG uses: <a rel="nofollow" class="result__a" href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fexample.com...">
+                    const urlRegex = /<a[^>]*class="result__a"[^>]*href="\/\/duckduckgo\.com\/l\/\?uddg=([^"&]+)/i;
                     const match = html.match(urlRegex);
 
                     if (match && match[1]) {
@@ -524,16 +535,16 @@
                         log(`Found URL: ${resultUrl}`);
                         callback(null, resultUrl);
                     } else {
-                        log('No Google results found');
+                        log('No DuckDuckGo results found');
                         callback(new Error('No results'), null);
                     }
                 } catch (error) {
-                    logError('Error parsing Google results:', error);
+                    logError('Error parsing DuckDuckGo results:', error);
                     callback(error, null);
                 }
             },
             onerror: function(error) {
-                logError('Google search failed:', error);
+                logError('DuckDuckGo search failed:', error);
                 callback(error, null);
             },
             timeout: 10000
@@ -742,10 +753,10 @@
         log(`Starting extraction for: ${venueData.name}`);
         log(`Search query: ${query}`);
 
-        // Step 1: Google search
-        googleSearch(query, (searchError, websiteUrl) => {
+        // Step 1: DuckDuckGo search to find venue website
+        duckDuckGoSearch(query, (searchError, websiteUrl) => {
             if (searchError || !websiteUrl) {
-                logError('Google search failed for:', venueData.name);
+                logError('Search failed for:', venueData.name);
                 venueData.extracted = {
                     error: 'No search results found',
                     searchQuery: query
@@ -755,7 +766,7 @@
                 return;
             }
 
-            // Step 2: Scrape website
+            // Step 2: Scrape the venue's website for contact data
             scrapeWebsite(websiteUrl, (scrapeError, extractedData) => {
                 if (scrapeError) {
                     logError('Scraping failed for:', venueData.name);
