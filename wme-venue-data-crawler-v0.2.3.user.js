@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Venue Data Crawler
 // @namespace    https://github.com/manchesterjm
-// @version      0.2.2
+// @version      0.2.3
 // @description  Scan venues for missing data and extract from websites
 // @author       manchesterjm
 // @match        https://www.waze.com/editor*
@@ -19,9 +19,9 @@
  *
  * Scans venues for missing data and extracts information from their websites.
  *
- * Version: 0.2.2 - Fixed state abbreviation extraction
+ * Version: 0.2.3 - Added state name to abbreviation conversion
  *
- * @file wme-venue-data-crawler-v0.2.2.user.js
+ * @file wme-venue-data-crawler-v0.2.3.user.js
  */
 
 /* global W, GM_xmlhttpRequest */
@@ -34,7 +34,7 @@
     // ============================================================================
 
     const SCRIPT_NAME = 'WME Venue Data Crawler';
-    const SCRIPT_VERSION = '0.2.2';
+    const SCRIPT_VERSION = '0.2.3';
     const SCRIPT_ID = 'wme-venue-data-crawler';
 
     /**
@@ -78,6 +78,24 @@
         'CANAL',                 // Canals
         'FOREST_GROVE'           // Forests
     ];
+
+    /**
+     * US State name to abbreviation mapping
+     * Used to convert full state names to abbreviations for Google searches
+     */
+    const STATE_ABBREVIATIONS = {
+        'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR', 'California': 'CA',
+        'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE', 'Florida': 'FL', 'Georgia': 'GA',
+        'Hawaii': 'HI', 'Idaho': 'ID', 'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA',
+        'Kansas': 'KS', 'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME', 'Maryland': 'MD',
+        'Massachusetts': 'MA', 'Michigan': 'MI', 'Minnesota': 'MN', 'Mississippi': 'MS', 'Missouri': 'MO',
+        'Montana': 'MT', 'Nebraska': 'NE', 'Nevada': 'NV', 'New Hampshire': 'NH', 'New Jersey': 'NJ',
+        'New Mexico': 'NM', 'New York': 'NY', 'North Carolina': 'NC', 'North Dakota': 'ND', 'Ohio': 'OH',
+        'Oklahoma': 'OK', 'Oregon': 'OR', 'Pennsylvania': 'PA', 'Rhode Island': 'RI', 'South Carolina': 'SC',
+        'South Dakota': 'SD', 'Tennessee': 'TN', 'Texas': 'TX', 'Utah': 'UT', 'Vermont': 'VT',
+        'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV', 'Wisconsin': 'WI', 'Wyoming': 'WY',
+        'District of Columbia': 'DC', 'Puerto Rico': 'PR'
+    };
 
     /**
      * Category to search hint mapping
@@ -203,12 +221,13 @@
             const venues = W.model.venues.getObjectArray();
             for (const venue of venues) {
                 try {
-                    const address = venue.getAddress();
+                    // Fix deprecation warning: pass W.model as first argument
+                    const address = venue.getAddress(W.model);
                     if (address && address.attributes && address.attributes.state) {
                         const state = address.attributes.state;
                         stateName = state.getName ? state.getName() : (state.attributes?.name || '');
 
-                        // Try multiple ways to get abbreviation
+                        // Try multiple ways to get abbreviation directly
                         if (state.attributes?.abbreviation) {
                             stateAbbr = state.attributes.abbreviation;
                         } else if (state.attributes?.abbr) {
@@ -217,8 +236,13 @@
                             stateAbbr = state.getAbbreviation();
                         }
 
-                        // If we found a state abbreviation, use it
-                        if (stateAbbr) {
+                        // If no abbreviation found but we have state name, convert it
+                        if (!stateAbbr && stateName && STATE_ABBREVIATIONS[stateName]) {
+                            stateAbbr = STATE_ABBREVIATIONS[stateName];
+                        }
+
+                        // If we found state info, use it
+                        if (stateAbbr || stateName) {
                             break;
                         }
                     }
