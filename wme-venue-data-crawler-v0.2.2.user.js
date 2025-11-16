@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Venue Data Crawler
 // @namespace    https://github.com/manchesterjm
-// @version      0.2.1
+// @version      0.2.2
 // @description  Scan venues for missing data and extract from websites
 // @author       manchesterjm
 // @match        https://www.waze.com/editor*
@@ -19,9 +19,9 @@
  *
  * Scans venues for missing data and extracts information from their websites.
  *
- * Version: 0.2.1 - Fixed location extraction
+ * Version: 0.2.2 - Fixed state abbreviation extraction
  *
- * @file wme-venue-data-crawler-v0.2.1.user.js
+ * @file wme-venue-data-crawler-v0.2.2.user.js
  */
 
 /* global W, GM_xmlhttpRequest */
@@ -34,7 +34,7 @@
     // ============================================================================
 
     const SCRIPT_NAME = 'WME Venue Data Crawler';
-    const SCRIPT_VERSION = '0.2.1';
+    const SCRIPT_VERSION = '0.2.2';
     const SCRIPT_ID = 'wme-venue-data-crawler';
 
     /**
@@ -195,13 +195,40 @@
             const city = cities[0];
             const cityName = city.attributes.name || '';
 
-            // Get state from the city
-            const stateID = city.attributes.stateID;
-            const state = stateID ? W.model.states.getObjectById(stateID) : null;
-            const stateName = state ? state.attributes.name : '';
-            const stateAbbr = state ? state.attributes.abbreviation : '';
+            // Get state by checking venues in the area with valid address data
+            // This is more reliable than city.attributes.stateID
+            let stateAbbr = '';
+            let stateName = '';
 
-            log(`Location context: ${cityName}, ${stateAbbr}`);
+            const venues = W.model.venues.getObjectArray();
+            for (const venue of venues) {
+                try {
+                    const address = venue.getAddress();
+                    if (address && address.attributes && address.attributes.state) {
+                        const state = address.attributes.state;
+                        stateName = state.getName ? state.getName() : (state.attributes?.name || '');
+
+                        // Try multiple ways to get abbreviation
+                        if (state.attributes?.abbreviation) {
+                            stateAbbr = state.attributes.abbreviation;
+                        } else if (state.attributes?.abbr) {
+                            stateAbbr = state.attributes.abbr;
+                        } else if (state.getAbbreviation) {
+                            stateAbbr = state.getAbbreviation();
+                        }
+
+                        // If we found a state abbreviation, use it
+                        if (stateAbbr) {
+                            break;
+                        }
+                    }
+                } catch (e) {
+                    // Skip venues without valid address data
+                    continue;
+                }
+            }
+
+            log(`Location context: ${cityName}, ${stateAbbr || stateName}`);
             return { cityName, stateName, stateAbbr };
         } catch (error) {
             logError('Error getting location from editor:', error);

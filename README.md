@@ -36,9 +36,13 @@ This script combines venue scanning capabilities (similar to WME Place Harmonize
   - Pattern matching for common formats
   - CORS bypass using GM_xmlhttpRequest
 
-## Current Version: 0.2.1 - Location Extraction Fix
+## Current Version: 0.2.2 - State Abbreviation Fix
 
 ### ✅ Implemented Features
+
+**v0.2.2 - Bugfix:**
+- **Fixed State Detection**: Now checks venue addresses to find state abbreviation
+- **Dynamic Location**: Works in any state by detecting from loaded venue data
 
 **v0.2.1 - Bugfix:**
 - **Fixed Location Extraction**: Now queries WME editor for city/state instead of venue data
@@ -74,8 +78,8 @@ See [SESSION_PROGRESS.md](SESSION_PROGRESS.md) for complete development roadmap.
 ## Installation
 
 1. Install [Tampermonkey](https://www.tampermonkey.net/) browser extension
-2. **Option A - From File**: Press Ctrl+O, open `wme-venue-data-crawler-v0.2.1.user.js`, click Install
-3. **Option B - From GitHub**: Go to the [raw file](https://github.com/manchesterjm/Venue-Data-Crawler/blob/master/wme-venue-data-crawler-v0.2.1.user.js), click Raw, click Install
+2. **Option A - From File**: Press Ctrl+O, open `wme-venue-data-crawler-v0.2.2.user.js`, click Install
+3. **Option B - From GitHub**: Go to the [raw file](https://github.com/manchesterjm/Venue-Data-Crawler/blob/master/wme-venue-data-crawler-v0.2.2.user.js), click Raw, click Install
 4. Navigate to [Waze Map Editor](https://www.waze.com/editor)
 
 ## Usage
