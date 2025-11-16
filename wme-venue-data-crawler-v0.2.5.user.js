@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Venue Data Crawler
 // @namespace    https://github.com/manchesterjm
-// @version      0.2.4
+// @version      0.2.5
 // @description  Scan venues for missing data and extract from websites
 // @author       manchesterjm
 // @match        https://www.waze.com/editor*
@@ -19,9 +19,9 @@
  *
  * Scans venues for missing data and extracts information from their websites.
  *
- * Version: 0.2.4 - Switched to DuckDuckGo (Google blocks automated requests)
+ * Version: 0.2.5 - Fixed const reassignment bug in scrapeWebsite
  *
- * @file wme-venue-data-crawler-v0.2.4.user.js
+ * @file wme-venue-data-crawler-v0.2.5.user.js
  */
 
 /* global W, GM_xmlhttpRequest */
@@ -34,7 +34,7 @@
     // ============================================================================
 
     const SCRIPT_NAME = 'WME Venue Data Crawler';
-    const SCRIPT_VERSION = '0.2.4';
+    const SCRIPT_VERSION = '0.2.5';
     const SCRIPT_ID = 'wme-venue-data-crawler';
 
     /**
@@ -462,7 +462,7 @@
 
                     // Try extraction methods in order of reliability
                     let extractedData = extractSchemaOrg(html);
-                    const method = extractedData ? 'Schema.org' : null;
+                    let method = extractedData ? 'Schema.org' : null;
 
                     if (!extractedData) {
                         extractedData = extractMicrodata(html);

@@ -36,9 +36,14 @@ This script combines venue scanning capabilities (similar to WME Place Harmonize
   - Pattern matching for common formats
   - CORS bypass using GM_xmlhttpRequest
 
-## Current Version: 0.2.4 - DuckDuckGo Search
+## Current Version: 0.2.5 - Fixed Extraction Bug
 
 ### ✅ Implemented Features
+
+**v0.2.5 - Bugfix:**
+- **Fixed JavaScript Error**: Changed `const method` to `let method` in scrapeWebsite()
+- **All Extraction Methods Work**: Schema.org, Microdata, and Regex fallbacks now functional
+- **Tested Successfully**: 6 out of 11 venues successfully extracted data in testing
 
 **v0.2.4 - Search Engine Change:**
 - **Switched to DuckDuckGo**: Google blocks automated requests (status: 0 errors)
@@ -88,8 +93,8 @@ See [SESSION_PROGRESS.md](SESSION_PROGRESS.md) for complete development roadmap.
 ## Installation
 
 1. Install [Tampermonkey](https://www.tampermonkey.net/) browser extension
-2. **Option A - From File**: Press Ctrl+O, open `wme-venue-data-crawler-v0.2.4.user.js`, click Install
-3. **Option B - From GitHub**: Go to the [raw file](https://github.com/manchesterjm/Venue-Data-Crawler/blob/master/wme-venue-data-crawler-v0.2.4.user.js), click Raw, click Install
+2. **Option A - From File**: Press Ctrl+O, open `wme-venue-data-crawler-v0.2.5.user.js`, click Install
+3. **Option B - From GitHub**: Go to the [raw file](https://github.com/manchesterjm/Venue-Data-Crawler/blob/master/wme-venue-data-crawler-v0.2.5.user.js), click Raw, click Install
 4. Navigate to [Waze Map Editor](https://www.waze.com/editor)
 
 ## Usage
