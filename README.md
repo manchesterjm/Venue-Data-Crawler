@@ -99,8 +99,8 @@ See [SESSION_PROGRESS.md](SESSION_PROGRESS.md) for complete development roadmap.
 ## Installation
 
 1. Install [Tampermonkey](https://www.tampermonkey.net/) browser extension
-2. **Option A - From File**: Press Ctrl+O, open `wme-venue-data-crawler-v0.2.5.user.js`, click Install
-3. **Option B - From GitHub**: Go to the [raw file](https://github.com/manchesterjm/Venue-Data-Crawler/blob/master/wme-venue-data-crawler-v0.2.5.user.js), click Raw, click Install
+2. **Option A - From File**: Press Ctrl+O, open `wme-venue-data-crawler-v0.2.6.user.js`, click Install
+3. **Option B - From GitHub**: Go to the [raw file](https://github.com/manchesterjm/Venue-Data-Crawler/blob/master/wme-venue-data-crawler-v0.2.6.user.js), click Raw, click Install
 4. Navigate to [Waze Map Editor](https://www.waze.com/editor)
 
 ## Usage
