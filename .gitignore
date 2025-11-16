@@ -10,6 +10,9 @@ node_modules/
 # Backups
 backups/
 
+# Scan reports (local testing data)
+scan-reports/
+
 # OS files
 .DS_Store
 Thumbs.db
