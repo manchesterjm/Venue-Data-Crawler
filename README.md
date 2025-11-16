@@ -36,9 +36,37 @@ This script combines venue scanning capabilities (similar to WME Place Harmonize
   - Pattern matching for common formats
   - CORS bypass using GM_xmlhttpRequest
 
-## Development Status
+## Current Version: 0.1.0 (Proof of Concept)
 
-🚧 **Planning Phase** - Not yet implemented
+### ✅ Implemented Features (v0.1.0)
+
+- **Venue Scanning**: Scan all loaded venues in visible area
+- **Missing Data Detection**: Identify venues missing name, phone, website, description
+- **Severity Classification**:
+  - Complete (Green) - All data present
+  - Minor (Yellow) - 1-2 fields missing
+  - Major (Red) - 3+ fields missing
+  - Critical (Dark Red) - No contact info
+- **Interactive UI**: Draggable panel with statistics and venue list
+- **Statistics Display**: Breakdown by severity level
+- **Color-Coded Indicators**: Visual severity representation
+
+### 🚧 In Development
+
+- Visual highlighting on map (OpenLayers layer)
+- Automatic scanning on map movement
+- Web scraping functionality
+- Google search integration
+- Data extraction and confirmation UI
+
+See [POC-README.md](POC-README.md) for detailed usage instructions and [SESSION_PROGRESS.md](SESSION_PROGRESS.md) for development roadmap.
+
+## Installation
+
+1. Install [Tampermonkey](https://www.tampermonkey.net/) browser extension
+2. Open `wme-venue-data-crawler-v0.1.0.user.js` in Tampermonkey
+3. Click "Install"
+4. Navigate to [Waze Map Editor](https://www.waze.com/editor)
 
 ## Documentation
 
