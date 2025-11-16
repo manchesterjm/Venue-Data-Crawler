@@ -36,37 +36,50 @@ This script combines venue scanning capabilities (similar to WME Place Harmonize
   - Pattern matching for common formats
   - CORS bypass using GM_xmlhttpRequest
 
-## Current Version: 0.1.0 (Proof of Concept)
+## Current Version: 0.2.0 - Web Scraping Foundation
 
-### ✅ Implemented Features (v0.1.0)
+### ✅ Implemented Features
 
+**v0.2.0 - Web Scraping:**
+- **Google Search Integration**: Smart query building with city/state from WME
+- **Automated Data Extraction**: Three-method extraction (Schema.org, Microdata, Regex)
+- **Extract Data Button**: Per-venue extraction with real-time status
+- **Category Hints**: 25+ category mappings for better search accuracy
+- **Typo Tolerance**: Google auto-corrects venue name misspellings
+- **Extraction Results**: Color-coded display of found/missing data
+- **Enhanced Reports**: Downloaded reports include extracted data
+
+**v0.1.x - Scanning Foundation:**
 - **Venue Scanning**: Scan all loaded venues in visible area
-- **Missing Data Detection**: Identify venues missing name, phone, website, description
-- **Severity Classification**:
-  - Complete (Green) - All data present
-  - Minor (Yellow) - 1-2 fields missing
-  - Major (Red) - 3+ fields missing
-  - Critical (Dark Red) - No contact info
+- **Missing Data Detection**: Identify venues missing name, phone, website
+- **Severity Classification**: 4-level system (Complete, Minor, Major, Critical)
+- **Smart Filtering**: Excludes unnamed venues and natural features
+- **Location Context**: Extracts city/state from WME for each venue
 - **Interactive UI**: Draggable panel with statistics and venue list
-- **Statistics Display**: Breakdown by severity level
-- **Color-Coded Indicators**: Visual severity representation
+- **Downloadable Reports**: Detailed text reports of scan results
 
-### 🚧 In Development
+### 🚧 Planned Features
 
-- Visual highlighting on map (OpenLayers layer)
-- Automatic scanning on map movement
-- Web scraping functionality
-- Google search integration
-- Data extraction and confirmation UI
+- **v0.3.0**: Visual highlighting on map (OpenLayers layer)
+- **v0.4.0**: Data confirmation UI with editing before applying
+- **v0.5.0**: Automated venue updates using WME Actions system
+- **v1.0.0**: Production release
 
-See [POC-README.md](POC-README.md) for detailed usage instructions and [SESSION_PROGRESS.md](SESSION_PROGRESS.md) for development roadmap.
+See [SESSION_PROGRESS.md](SESSION_PROGRESS.md) for complete development roadmap.
 
 ## Installation
 
 1. Install [Tampermonkey](https://www.tampermonkey.net/) browser extension
-2. Open `wme-venue-data-crawler-v0.1.0.user.js` in Tampermonkey
-3. Click "Install"
+2. **Option A - From File**: Press Ctrl+O, open `wme-venue-data-crawler-v0.2.0.user.js`, click Install
+3. **Option B - From GitHub**: Go to the [raw file](https://github.com/manchesterjm/Venue-Data-Crawler/blob/master/wme-venue-data-crawler-v0.2.0.user.js), click Raw, click Install
 4. Navigate to [Waze Map Editor](https://www.waze.com/editor)
+
+## Usage
+
+1. **Scan venues**: Click "Scan Visible Venues" button
+2. **Extract data**: Click "🔍 Extract Data" button next to any venue
+3. **View results**: See extracted phone/website with color coding
+4. **Download report**: Click "📥 Download Scan Report" for detailed results
 
 ## Documentation
 
