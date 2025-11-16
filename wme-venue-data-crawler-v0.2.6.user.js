@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Venue Data Crawler
 // @namespace    https://github.com/manchesterjm
-// @version      0.2.5
+// @version      0.2.6
 // @description  Scan venues for missing data and extract from websites
 // @author       manchesterjm
 // @match        https://www.waze.com/editor*
@@ -19,9 +19,9 @@
  *
  * Scans venues for missing data and extracts information from their websites.
  *
- * Version: 0.2.5 - Fixed const reassignment bug in scrapeWebsite
+ * Version: 0.2.6 - Improved phone number extraction with area code validation
  *
- * @file wme-venue-data-crawler-v0.2.5.user.js
+ * @file wme-venue-data-crawler-v0.2.6.user.js
  */
 
 /* global W, GM_xmlhttpRequest */
@@ -34,7 +34,7 @@
     // ============================================================================
 
     const SCRIPT_NAME = 'WME Venue Data Crawler';
-    const SCRIPT_VERSION = '0.2.5';
+    const SCRIPT_VERSION = '0.2.6';
     const SCRIPT_ID = 'wme-venue-data-crawler';
 
     /**
@@ -301,15 +301,72 @@
     // ============================================================================
 
     /**
-     * Extract phone number from text using regex
-     * @param {string} text - Text to search
+     * Extract phone number from HTML with intelligent searching
+     * Looks in common locations and validates area codes
+     * @param {string} html - HTML content
+     * @param {string} stateAbbr - State abbreviation for area code validation
      * @returns {string|null} Phone number or null
      */
-    function extractPhoneRegex(text) {
-        // Match common phone formats: (123) 456-7890, 123-456-7890, 123.456.7890, etc.
-        const phoneRegex = /\b(?:\+?1[-.]?)?\(?([0-9]{3})\)?[-.]?([0-9]{3})[-.]?([0-9]{4})\b/;
-        const match = text.match(phoneRegex);
-        return match ? match[0] : null;
+    function extractPhoneRegex(html, stateAbbr = 'CO') {
+        // Colorado area codes for validation
+        const validAreaCodes = {
+            'CO': ['303', '720', '970', '719'],
+            // Add more states as needed
+        };
+
+        // Phone number regex - matches various formats
+        const phoneRegex = /\b(?:\+?1[-.\s]?)?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})\b/g;
+
+        // Priority search areas (in order)
+        const searchAreas = [
+            // 1. Contact sections (highest priority)
+            /<(?:div|section|footer|nav)[^>]*(?:class|id)=["'][^"']*(?:contact|phone|call|tel|reach)[^"']*["'][^>]*>([\s\S]{0,1500}?)<\/(?:div|section|footer|nav)>/gi,
+            // 2. Footer sections
+            /<footer[^>]*>([\s\S]{0,2000}?)<\/footer>/gi,
+            // 3. Header/nav sections
+            /<(?:header|nav)[^>]*>([\s\S]{0,1500}?)<\/(?:header|nav)>/gi,
+            // 4. Entire HTML as fallback
+            /.*/
+        ];
+
+        const foundNumbers = [];
+
+        // Search each area in priority order
+        for (const areaPattern of searchAreas) {
+            const areaMatches = html.match(areaPattern);
+
+            if (areaMatches) {
+                for (const area of areaMatches) {
+                    // Find all phone numbers in this area
+                    let match;
+                    phoneRegex.lastIndex = 0; // Reset regex
+
+                    while ((match = phoneRegex.exec(area)) !== null) {
+                        const areaCode = match[1];
+                        const phoneNumber = match[0];
+
+                        // Validate area code if we know the state
+                        if (validAreaCodes[stateAbbr]) {
+                            if (validAreaCodes[stateAbbr].includes(areaCode)) {
+                                return phoneNumber; // Return first valid number found
+                            } else {
+                                continue; // Skip invalid area codes
+                            }
+                        } else {
+                            // If we don't know the state, collect all numbers
+                            foundNumbers.push(phoneNumber);
+                        }
+                    }
+                }
+
+                // If we found numbers in this priority area, return the first one
+                if (foundNumbers.length > 0) {
+                    return foundNumbers[0];
+                }
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -428,11 +485,12 @@
     /**
      * Extract data using regex fallback
      * @param {string} html - HTML content
+     * @param {string} stateAbbr - State abbreviation for area code validation
      * @returns {Object|null} Extracted data or null
      */
-    function extractWithRegex(html) {
+    function extractWithRegex(html, stateAbbr) {
         const data = {
-            phone: extractPhoneRegex(html),
+            phone: extractPhoneRegex(html, stateAbbr),
             website: null,
             address: null
         };
@@ -448,9 +506,10 @@
     /**
      * Scrape a website for venue data
      * @param {string} url - Website URL
+     * @param {string} stateAbbr - State abbreviation for phone validation
      * @param {Function} callback - Callback with (error, data)
      */
-    function scrapeWebsite(url, callback) {
+    function scrapeWebsite(url, stateAbbr, callback) {
         log(`Scraping: ${url}`);
 
         GM_xmlhttpRequest({
@@ -470,7 +529,7 @@
                     }
 
                     if (!extractedData) {
-                        extractedData = extractWithRegex(html);
+                        extractedData = extractWithRegex(html, stateAbbr);
                         if (extractedData) method = 'Regex';
                     }
 
@@ -767,7 +826,7 @@
             }
 
             // Step 2: Scrape the venue's website for contact data
-            scrapeWebsite(websiteUrl, (scrapeError, extractedData) => {
+            scrapeWebsite(websiteUrl, venueData.location.stateAbbr, (scrapeError, extractedData) => {
                 if (scrapeError) {
                     logError('Scraping failed for:', venueData.name);
                     venueData.extracted = {

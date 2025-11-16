@@ -36,9 +36,15 @@ This script combines venue scanning capabilities (similar to WME Place Harmonize
   - Pattern matching for common formats
   - CORS bypass using GM_xmlhttpRequest
 
-## Current Version: 0.2.5 - Fixed Extraction Bug
+## Current Version: 0.2.6 - Improved Phone Extraction
 
 ### ✅ Implemented Features
+
+**v0.2.6 - Phone Number Intelligence:**
+- **Priority Search Areas**: Searches contact sections, footer, header, then full HTML
+- **Area Code Validation**: Only accepts phone numbers with correct area codes (CO: 303, 720, 970, 719)
+- **Filters Wrong Numbers**: Prevents extracting numbers from other states (like previous 519/817 errors)
+- **Better Accuracy**: Should find phone numbers in nav bars, footers, and contact sections
 
 **v0.2.5 - Bugfix:**
 - **Fixed JavaScript Error**: Changed `const method` to `let method` in scrapeWebsite()
