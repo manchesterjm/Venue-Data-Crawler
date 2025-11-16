@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Venue Data Crawler
 // @namespace    https://github.com/manchesterjm
-// @version      0.2.0
+// @version      0.2.1
 // @description  Scan venues for missing data and extract from websites
 // @author       manchesterjm
 // @match        https://www.waze.com/editor*
@@ -19,9 +19,9 @@
  *
  * Scans venues for missing data and extracts information from their websites.
  *
- * Version: 0.2.0 - Web scraping foundation
+ * Version: 0.2.1 - Fixed location extraction
  *
- * @file wme-venue-data-crawler-v0.2.0.user.js
+ * @file wme-venue-data-crawler-v0.2.1.user.js
  */
 
 /* global W, GM_xmlhttpRequest */
@@ -34,7 +34,7 @@
     // ============================================================================
 
     const SCRIPT_NAME = 'WME Venue Data Crawler';
-    const SCRIPT_VERSION = '0.2.0';
+    const SCRIPT_VERSION = '0.2.1';
     const SCRIPT_ID = 'wme-venue-data-crawler';
 
     /**
@@ -176,26 +176,35 @@
     // ============================================================================
 
     /**
-     * Get city and state information for a venue
-     * @param {Object} venue - WME venue object
+     * Get city and state information from the currently loaded map view
+     * Note: We query the EDITOR for location, not the venue itself,
+     * because venue data may be incomplete/incorrect (that's what we're fixing!)
      * @returns {{cityName: string, stateName: string, stateAbbr: string}}
      */
-    function getVenueLocation(venue) {
+    function getVenueLocation() {
         try {
-            // Get city from venue
-            const cityID = venue.attributes.cityID;
-            const city = cityID ? W.model.cities.getObjectById(cityID) : null;
-            const cityName = city ? city.attributes.name : '';
+            // Get all loaded cities in the current map view
+            const cities = W.model.cities.getObjectArray();
 
-            // Get state from venue
-            const stateID = venue.attributes.stateID;
+            if (cities.length === 0) {
+                logError('No cities loaded in current view');
+                return { cityName: '', stateName: '', stateAbbr: '' };
+            }
+
+            // Use the first loaded city (user is zoomed into a specific area)
+            const city = cities[0];
+            const cityName = city.attributes.name || '';
+
+            // Get state from the city
+            const stateID = city.attributes.stateID;
             const state = stateID ? W.model.states.getObjectById(stateID) : null;
             const stateName = state ? state.attributes.name : '';
             const stateAbbr = state ? state.attributes.abbreviation : '';
 
+            log(`Location context: ${cityName}, ${stateAbbr}`);
             return { cityName, stateName, stateAbbr };
         } catch (error) {
-            logError('Error getting venue location:', error);
+            logError('Error getting location from editor:', error);
             return { cityName: '', stateName: '', stateAbbr: '' };
         }
     }
@@ -573,6 +582,9 @@
         let scanned = 0;
         let skipped = 0;
 
+        // Get location info once for all venues (they're all in the same view)
+        const location = getVenueLocation();
+
         for (const venue of venues) {
             // Skip if not a venue
             if (!venue || venue.type !== 'venue') continue;
@@ -594,9 +606,6 @@
 
             // Analyze venue
             const analysis = analyzeVenue(venue);
-
-            // Get location info
-            const location = getVenueLocation(venue);
 
             // Store results
             state.scannedVenues.set(venue.attributes.id, {
