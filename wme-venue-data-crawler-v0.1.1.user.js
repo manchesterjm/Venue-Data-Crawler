@@ -60,6 +60,26 @@
         { field: 'url', label: 'Website', required: false }
     ];
 
+    /**
+     * Categories to exclude from scanning (natural features, non-business venues)
+     * These venues don't need business data like phone/website
+     * @type {Array<string>}
+     */
+    const EXCLUDED_CATEGORIES = [
+        'RESIDENCE_HOME',        // RPPs - residential places
+        'NATURAL_FEATURES',      // Natural features
+        'SCENIC_LOOKOUT_VIEW_POINT', // Scenic lookouts
+        'PARK',                  // Parks (may not have phone/website)
+        'JUNCTION_INTERCHANGE',  // Road junctions
+        'BRIDGE',                // Bridges
+        'TUNNEL',                // Tunnels
+        'ISLAND',                // Islands
+        'SEA_LAKE_POOL',         // Lakes, seas, pools
+        'RIVER_STREAM',          // Rivers and streams
+        'CANAL',                 // Canals
+        'FOREST_GROVE'           // Forests
+    ];
+
     // ============================================================================
     // STATE
     // ============================================================================
@@ -211,14 +231,26 @@
 
         const venues = W.model.venues.getObjectArray();
         let scanned = 0;
+        let skipped = 0;
 
         for (const venue of venues) {
             // Skip if not a venue
             if (!venue || venue.type !== 'venue') continue;
 
-            // Skip residential places (RPPs) - not business venues
+            // Skip unnamed venues - nothing we can do without a name
+            const venueName = venue.attributes.name;
+            if (!venueName || venueName.trim() === '') {
+                skipped++;
+                continue;
+            }
+
+            // Skip excluded categories (RPPs, natural features, etc.)
             const categories = venue.attributes.categories || [];
-            if (categories.includes('RESIDENCE_HOME')) continue;
+            const hasExcludedCategory = categories.some(cat => EXCLUDED_CATEGORIES.includes(cat));
+            if (hasExcludedCategory) {
+                skipped++;
+                continue;
+            }
 
             // Analyze venue
             const analysis = analyzeVenue(venue);
@@ -240,7 +272,7 @@
         }
 
         state.lastScanTime = new Date();
-        log(`Scanned ${scanned} venues`);
+        log(`Scanned ${scanned} venues (skipped ${skipped} excluded/unnamed venues)`);
 
         return scanned;
     }
@@ -291,6 +323,9 @@
         report += `Scan Time: ${timestamp}\n`;
         report += `Scan Location: ${W.map.getCenter().lon.toFixed(6)}, ${W.map.getCenter().lat.toFixed(6)}\n`;
         report += `Zoom Level: ${W.map.getZoom()}\n`;
+        report += `\n`;
+        report += `Excluded Categories: ${EXCLUDED_CATEGORIES.join(', ')}\n`;
+        report += `Note: Unnamed venues and excluded categories are automatically skipped\n`;
         report += `\n`;
 
         // Statistics
